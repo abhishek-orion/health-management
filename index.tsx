@@ -18,21 +18,17 @@ const startApp = () => {
   );
 };
 
-// Initialize MSW in development and wait for it to be ready
-if (process.env.NODE_ENV === 'development') {
-  worker.start({
-    serviceWorker: {
-      url: '/mockServiceWorker.js',
-    },
-    onUnhandledRequest: 'bypass',
-    quiet: false,
-  }).then(() => {
-    console.log('MSW is ready, starting React app');
-    startApp();
-  }).catch((error) => {
-    console.error('Failed to start MSW:', error);
-    startApp(); // Start app anyway if MSW fails
-  });
-} else {
+// Initialize MSW in both development and production
+worker.start({
+  serviceWorker: {
+    url: '/mockServiceWorker.js',
+  },
+  onUnhandledRequest: 'bypass',
+  quiet: process.env.NODE_ENV !== 'development',
+}).then(() => {
+  console.log('MSW is ready, starting React app');
   startApp();
-}
+}).catch((error) => {
+  console.error('Failed to start MSW:', error);
+  startApp(); // Start app anyway if MSW fails
+});
