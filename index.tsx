@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { USE_MSW } from './src/config/api';
+import { worker } from './src/mocks/browser';
 import App from "./App";
 import { AuthProvider } from "./src/contexts/AuthContext/AuthContext";
 
@@ -28,9 +29,6 @@ const initializeMSW = async () => {
   console.log('Initializing MSW...');
   
   try {
-    // Dynamic import to avoid loading MSW when not needed
-    const { worker } = await import('./src/mocks/browser');
-    
     const isNetlify = window.location.hostname.includes('netlify.app');
     const swUrl = '/mockServiceWorker.js';
 
