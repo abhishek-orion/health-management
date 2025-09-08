@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",    
+    /* Specify module code generation: ESNext for latest ECMAScript module syntax */
+    "module": "ESNext",
+    /* Determine how modules get resolved: 'bundler' for compatibility with bundlers like Parcel */
+    "moduleResolution": "bundler",
+    /* Allow imports to include TypeScript file extensions (.ts, .tsx) */
+    "allowImportingTsExtensions": true,
+    /* Allow importing .json files as modules */
+    "resolveJsonModule": true,
+    /* Ensure each file can be safely transpiled without knowledge of other files */
+    "isolatedModules": true,
+    /* Do not emit outputs (Parcel handles this) */
+    "noEmit": true,
+    /* Support JSX in .tsx files: 'react-jsx' mode (React 17+) doesn't need to import React */
+    "jsx": "react-jsx",
+    /* Enable all strict type-checking options */
+    "strict": true,
+    /* Report errors on unused local variables */
+    "noUnusedLocals": true,
+    /* Report errors on unused parameters */
+    "noUnusedParameters": true,
+    /* Report errors for fallthrough cases in switch statements */
+    "noFallthroughCasesInSwitch": true,
+    /* Allow default imports from modules with no default export */
+    "allowSyntheticDefaultImports": true,
+    /* Ensure consistent casing in file names (important for case-sensitive file systems) */
+    "forceConsistentCasingInFileNames": true,
+    /* Shadcn/ui path mapping */
+    "baseUrl": ".",
+    "paths": {
+       "@/*": ["./src/*"]
+     }
+  },
+  /* Files to include in compilation: root TypeScript files and all TypeScript files in src directory */
+  "include": ["*.ts", "*.tsx", "src/**/*.ts", "src/**/*.tsx", "src/types/**/*.d.ts"],
+  /* Files to exclude from compilation: third-party libraries and build output */
+  "exclude": ["node_modules", "dist"]
+}
