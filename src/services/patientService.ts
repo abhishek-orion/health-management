@@ -4,7 +4,7 @@ import {
   PaginatedResponse,
 } from "@/types/Pagination/Pagination";
 import { simulateApiCall } from '@/utils/apiSimulator';
-import { getApiUrl, API_CONFIG } from '../config/api.ts';
+import { getApiUrl, API_CONFIG } from '../config/api';
 
 async function handleResponseError(response: Response, entityName: string): Promise<Response> {
   if (!response.ok) {
