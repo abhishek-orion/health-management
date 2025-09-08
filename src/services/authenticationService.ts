@@ -1,4 +1,4 @@
-import { getApiUrl, API_CONFIG } from '../config/api';
+import { getApiUrl, API_CONFIG } from '../config/api.ts';
 
 const authenticationService = {
     // login
