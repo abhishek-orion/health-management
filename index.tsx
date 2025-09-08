@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { USE_MSW } from './src/config/api';
+import { USE_MSW } from './src/config/api.ts';
 import { worker } from './src/mocks/browser';
 import App from "./App";
 import { AuthProvider } from "./src/contexts/AuthContext/AuthContext";
