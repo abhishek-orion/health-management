@@ -109,7 +109,7 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6" color="black">Email</Text>
+                        <Text type="h6" color="var(--neutral-900)">Email</Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.email}
@@ -135,7 +135,7 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6" color="black">Password</Text>
+                        <Text type="h6" color="var(--neutral-900)">Password</Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.password}

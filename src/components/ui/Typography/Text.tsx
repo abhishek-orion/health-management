@@ -1,4 +1,3 @@
-import React from "react";
 import { TextProps } from "./Text.types";
 
 const Text = ({ children, type, className, color, style }: TextProps) => {
