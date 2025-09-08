@@ -109,7 +109,7 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6" color="var(--neutral-900)">Email</Text>
+                        <Text type="h6" color="var(--neutral-black)">Email</Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.email}
@@ -135,7 +135,7 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6" color="var(--neutral-900)">Password</Text>
+                        <Text type="h6" color="var(--neutral-black)">Password</Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.password}
@@ -186,7 +186,7 @@ const LoginPage = () => {
                                 onCheckedChange={field.onChange}
                               />
                             </FormControl>
-                            <Text type="h6" color="black">Remember me</Text>
+                            <Text type="h6" color="var(--neutral-black)">Remember me</Text>
                           </div>
                         </FormItem>
                       )}
@@ -219,7 +219,7 @@ const LoginPage = () => {
                 className="w-full h-px bg-gray-200 my-4"
               ></div>
               <div className="flex justify-center">
-                <Text type="h6" color="black">Or</Text>
+                <Text type="h6" color="var(--neutral-black)">Or</Text>
               </div>
               <div className="flex justify-center flex-col gap-2">
                 <Button variant="outline" size="lg">

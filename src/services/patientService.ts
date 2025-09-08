@@ -4,6 +4,7 @@ import {
   PaginatedResponse,
 } from "@/types/Pagination/Pagination";
 import { simulateApiCall } from '@/utils/apiSimulator';
+import { getApiUrl, API_CONFIG } from '../config/api';
 
 async function handleResponseError(response: Response, entityName: string): Promise<Response> {
   if (!response.ok) {
@@ -34,7 +35,7 @@ const patientService = {
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.sortOrder) queryParams.append("sortOrder", params.sortOrder);
 
-    const url = `/api/patients${
+    const url = `${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}${
       queryParams.toString() ? "?" + queryParams.toString() : ""
     }`;
 
@@ -57,7 +58,7 @@ const patientService = {
     
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`/api/patients/${id}`, {
+    const response = await fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}/${id}`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
         "Content-Type": "application/json",
@@ -76,7 +77,7 @@ const patientService = {
     
     const token = localStorage.getItem("token");
 
-    const response = await fetch("/api/patients", {
+    const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS), {
       method: "POST",
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
@@ -98,7 +99,7 @@ const patientService = {
     await simulateApiCall({ minLatency: 300, maxLatency: 1800, errorRate: 3 });
     
     const token = localStorage.getItem("token");
-    const url = `/api/patients/${id}`;
+    const url = `${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}/${id}`;
   
     const response = await fetch(url, {
       method: "PUT",
@@ -122,7 +123,7 @@ const patientService = {
     
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`/api/patients/${id}`, {
+    const response = await fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: token ? `Bearer ${token}` : "",

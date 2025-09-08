@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { worker } from '@/mocks/browser';
+import { USE_MSW } from './src/config/api';
 import App from "./App";
 import { AuthProvider } from "./src/contexts/AuthContext/AuthContext";
 
@@ -18,31 +18,47 @@ const startApp = () => {
   );
 };
 
-// Initialize MSW in both development and production
-// Get the base URL for the current deployment
-// For Netlify deployments, we want to make sure the service worker is loaded from the root
-const isNetlify = window.location.hostname.includes('netlify.app');
-const swUrl = isNetlify ? '/mockServiceWorker.js' : `${window.location.pathname}mockServiceWorker.js`.replace(/\/+/g, '/');
+// Initialize MSW only when needed
+const initializeMSW = async () => {
+  if (!USE_MSW) {
+    console.log('MSW disabled, using real API');
+    return Promise.resolve();
+  }
 
-// Debug info for deployment
-console.log('MSW initializing with service worker URL:', swUrl);
-console.log('Current location pathname:', window.location.pathname);
-console.log('Current location href:', window.location.href);
-console.log('Is Netlify deployment:', isNetlify);
+  console.log('Initializing MSW...');
+  
+  try {
+    // Dynamic import to avoid loading MSW when not needed
+    const { worker } = await import('./src/mocks/browser');
+    
+    const isNetlify = window.location.hostname.includes('netlify.app');
+    const swUrl = '/mockServiceWorker.js';
 
-worker.start({
-  serviceWorker: {
-    url: swUrl,
-  },
-  onUnhandledRequest: 'bypass',
-  quiet: false, // Always log for debugging
-}).then(() => {
-  console.log('✅ MSW is ready and intercepting requests');
-  console.log('MSW handlers loaded:', worker.listHandlers().length);
-  startApp();
-}).catch((error) => {
-  console.error('❌ Failed to start MSW:', error);
-  console.error('Error details:', error.message);
-  console.error('Stack:', error.stack);
-  startApp(); // Start app anyway if MSW fails
-});
+    console.log('MSW Service Worker URL:', swUrl);
+    console.log('Is Netlify deployment:', isNetlify);
+
+    await worker.start({
+      serviceWorker: {
+        url: swUrl,
+      },
+      onUnhandledRequest: 'bypass',
+      quiet: false,
+    });
+
+    console.log('✅ MSW is ready and intercepting requests');
+    console.log('MSW handlers loaded:', worker.listHandlers().length);
+  } catch (error) {
+    console.error('❌ Failed to start MSW:', error);
+    throw error;
+  }
+};
+
+// Start the app
+initializeMSW()
+  .then(() => {
+    startApp();
+  })
+  .catch((error) => {
+    console.error('MSW initialization failed, starting app anyway:', error);
+    startApp();
+  });
