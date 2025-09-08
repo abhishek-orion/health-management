@@ -81,7 +81,7 @@ const LoginPage = () => {
           <Card className="border-0 shadow-none">
             <CardHeader>
               <CardTitle>
-                <Text type="h3">Welcome to Health Management</Text>
+                <Text type="h3" color="black">Welcome to Health Management</Text>
               </CardTitle>
               <CardDescription>
                 <Text type="h6" color="gray">
@@ -109,7 +109,7 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6">Email</Text>
+                        <Text type="h6" color="black">Email</Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.email}
@@ -135,7 +135,7 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6">Password</Text>
+                        <Text type="h6" color="black">Password</Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.password}
@@ -186,7 +186,7 @@ const LoginPage = () => {
                                 onCheckedChange={field.onChange}
                               />
                             </FormControl>
-                            <Text type="h6">Remember me</Text>
+                            <Text type="h6" color="black">Remember me</Text>
                           </div>
                         </FormItem>
                       )}
@@ -219,7 +219,7 @@ const LoginPage = () => {
                 className="w-full h-px bg-gray-200 my-4"
               ></div>
               <div className="flex justify-center">
-                <Text type="h6">Or</Text>
+                <Text type="h6" color="black">Or</Text>
               </div>
               <div className="flex justify-center flex-col gap-2">
                 <Button variant="outline" size="lg">
