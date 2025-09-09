@@ -21,7 +21,7 @@ const startApp = () => {
 // Initialize MSW in both development and production
 worker.start({
   serviceWorker: {
-    url: '/mockServiceWorker.js',
+    url: `${window.location.origin}/mockServiceWorker.js`,
   },
   onUnhandledRequest: 'bypass',
   quiet: process.env.NODE_ENV !== 'development',

@@ -79,13 +79,6 @@ export const parsePatientForForm = (patient?: any): PatientFormData => {
   const firstName = nameParts[0] || "";
   const lastName = nameParts.slice(1).join(" ") || "";
 
-  console.log('parsePatientForForm: Processing patient', { 
-    originalPatient: patient, 
-    nameParts, 
-    firstName, 
-    lastName 
-  });
-
   return {
     firstName,
     lastName,

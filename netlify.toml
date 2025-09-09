@@ -3,7 +3,7 @@
 
 [build]
   publish = "dist"
-  command = "npm run build"
+  command = "npm run build && cp ./public/mockServiceWorker.js ./dist/"
 
 # Handle SPA routing - redirect all paths to index.html
 [[redirects]]
@@ -17,5 +17,3 @@
   [headers.values]
     Content-Type = "application/javascript"
     Cache-Control = "no-store"
-
-# Remove API redirect - let MSW handle API routes

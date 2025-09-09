@@ -5,7 +5,7 @@ A comprehensive patient management system built with React, TypeScript, and mode
 ### Prerequisites
 
 - Node.js (version 14 or higher)
-- npm or yarn package manager
+- "npm" or "yarn" package manager
 
 ### Installation & Setup
 
@@ -14,10 +14,10 @@ A comprehensive patient management system built with React, TypeScript, and mode
    cd health-management
 
 2. **Install dependencies**
-   npm install
+   "npm install"
 
 3. **Start the development server**
-   npm start
+   "npm start"
    The application will be available at `http://localhost:1234`
 
 ### Build for Production

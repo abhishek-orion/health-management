@@ -11,6 +11,7 @@ interface UnauthorizedErrorProps {
   showLoginButton?: boolean;
   showRetryButton?: boolean;
   onRetry?: () => void;
+  onLogin?: () => void;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -21,6 +22,7 @@ export const UnauthorizedError = ({
   showLoginButton = true,
   showRetryButton = false,
   onRetry,
+  onLogin,
   className,
   size = 'md'
 }: UnauthorizedErrorProps) => {
@@ -28,7 +30,12 @@ export const UnauthorizedError = ({
   const { logout } = useAuth();
 
   const handleLogin = () => {
-    logout();
+    if (onLogin) {
+      onLogin();
+    } else {
+      logout();
+      navigate('/login');
+    }
     navigate('/login');
   };
 

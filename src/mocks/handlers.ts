@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import { Patient, patients } from "./sampleData/patients-data";
+import { Patient, patients as originalPatients } from "./sampleData/patients-data";
 import { 
   initializeAuthTokens, 
   cleanupExpiredTokens, 
@@ -8,6 +8,63 @@ import {
   getAuthToken,
   getAllAuthTokens
 } from "./utils/handlerUtils";
+
+// Create a persistent storage for patients data using sessionStorage
+const PATIENTS_STORAGE_KEY = 'msw_patients_data';
+
+const createPatientsStore = () => {
+  const initializeData = () => {
+    const stored = sessionStorage.getItem(PATIENTS_STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.warn('Failed to parse stored patients data, using original');
+      }
+    }
+    const initialData = [...originalPatients];
+    sessionStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(initialData));
+    return initialData;
+  };
+
+  const saveData = (patients: Patient[]) => {
+    sessionStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(patients));
+  };
+
+  return {
+    getAll: () => {
+      return initializeData();
+    },
+    findById: (id: string) => {
+      const patients = initializeData();
+      return patients.find((patient: Patient) => patient.id === parseInt(id));
+    },
+    findIndexById: (id: string) => {
+      const patients = initializeData();
+      return patients.findIndex((p: Patient) => p.id === parseInt(id));
+    },
+    update: (index: number, patient: Patient) => {
+      const patients = initializeData();
+      patients[index] = patient;
+      saveData(patients);
+      return patient;
+    },
+    add: (patient: Patient) => {
+      const patients = initializeData();
+      patients.push(patient);
+      saveData(patients);
+      return patient;
+    },
+    remove: (index: number) => {
+      const patients = initializeData();
+      const deleted = patients.splice(index, 1)[0];
+      saveData(patients);
+      return deleted;
+    }
+  };
+};
+
+const patientsStore = createPatientsStore();
 
 // Initialize and clean up tokens on startup
 initializeAuthTokens();
@@ -61,14 +118,6 @@ const requireAuthOrAllow = (authResult: ReturnType<typeof validateAuth>) => {
     return createAuthErrorResponse(authResult);
   }
   return null;
-};
-
-const findPatientById = (id: string) => {
-  return patients.find((patient) => patient.id === parseInt(id));
-};
-
-const findPatientIndexById = (id: string) => {
-  return patients.findIndex(p => p.id === parseInt(id));
 };
 
 const filterAndPaginatePatients = (url: URL, patients: Patient[]) => {
@@ -199,7 +248,7 @@ const handlers = [
     if (authError) return authError;
 
     const url = new URL(request.url);
-    const result = filterAndPaginatePatients(url, patients);
+    const result = filterAndPaginatePatients(url, patientsStore.getAll());
     await delay(500);
     return HttpResponse.json(result);
   }),
@@ -210,7 +259,7 @@ const handlers = [
     const authError = requireAuthOrAllow(authResult);
     if (authError) return authError;
 
-    return HttpResponse.json(findPatientById(params.id as string));
+    return HttpResponse.json(patientsStore.findById(params.id as string));
   }),
   // PUT api call to update patient
   http.put("/api/patients/:id", async ({ request, params }) => {
@@ -223,21 +272,22 @@ const handlers = [
       return authError;
     }
 
-    const patientIndex = findPatientIndexById(params.id as string);
+    const patientIndex = patientsStore.findIndexById(params.id as string);
     
     if (patientIndex === -1) {
       return HttpResponse.json({ message: "Patient not found" }, { status: 404 });
     }
     
     const updateData = await request.json() as Partial<Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>>;
+    const currentPatient = patientsStore.getAll()[patientIndex];
     
     const updatedPatient: Patient = {
-      ...patients[patientIndex],
+      ...currentPatient,
       ...updateData,
       updatedAt: new Date().toISOString(),
     };
     
-    patients[patientIndex] = updatedPatient;
+    patientsStore.update(patientIndex, updatedPatient);
     
     await delay(300);
     return HttpResponse.json(updatedPatient);
@@ -250,7 +300,7 @@ const handlers = [
     if (authError) return authError;
 
     const patientData = await request.json() as Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>;
-    const newId = Math.max(...patients.map(p => p.id)) + 1;
+    const newId = Math.max(...patientsStore.getAll().map(p => p.id)) + 1;
     const now = new Date().toISOString();
     
     const newPatient: Patient = {
@@ -260,7 +310,7 @@ const handlers = [
       updatedAt: now,
     };
     
-    patients.push(newPatient);
+    patientsStore.add(newPatient);
     
     await delay(300);
     return HttpResponse.json(newPatient, { status: 201 });
@@ -272,14 +322,13 @@ const handlers = [
     const authError = requireAuth(authResult);
     if (authError) return authError;
 
-    const patientIndex = findPatientIndexById(params.id as string);
+    const patientIndex = patientsStore.findIndexById(params.id as string);
     
     if (patientIndex === -1) {
       return HttpResponse.json({ message: "Patient not found" }, { status: 404 });
     }
     
-    const deletedPatient = patients[patientIndex];
-    patients.splice(patientIndex, 1);
+    const deletedPatient = patientsStore.remove(patientIndex);
     
     await delay(300);
     return HttpResponse.json({ message: "Patient deleted successfully", patient: deletedPatient });
