@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button/button';
 import { AddEditPatientModal } from '@/components/AddEditPatientModal';
 import Header from '@/components/Header/Header';
 import { useAuth } from '@/contexts/AuthContext/AuthContext';
+import { UnauthorizedError } from '@/components/ErrorStates';
 
 const PatientDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,11 +52,12 @@ const PatientDetails = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleEditSuccess = () => {
-    // Refresh patient details after successful edit
-    if (refetch) {
-      refetch();
-    }
+  const onLoginButtonClick = () => {
+    navigate('/login');
+  };
+
+  const onRetryButtonClick = () => {
+    window.location.reload();
   };
 
   if (loading) {
@@ -70,26 +72,13 @@ const PatientDetails = () => {
   }
 
   if (error) {
-    return (
-      <div className="patient-details-container">
-        <div className="patient-details-header">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            className="back-button"
-          >
-            <ArrowLeft size={20} />
-            <span>Back to Patients</span>
-          </Button>
-        </div>
-        <div className="patient-details-error">
-          <Text type="h6">Error: {error}</Text>
-          <Button onClick={() => window.location.reload()} className="retry-button">
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
+    return UnauthorizedError({
+      message: error,
+      showRetryButton: true,
+      onRetry: onRetryButtonClick,
+      showLoginButton: true,
+      onLogin: onLoginButtonClick
+    });
   }
 
   if (!patient) {
