@@ -1,4 +1,5 @@
 import { getApiUrl, API_CONFIG } from '../config/api';
+import { withErrorHandler } from './apiErrorHandler';
 
 const authenticationService = {
     // login
@@ -6,37 +7,42 @@ const authenticationService = {
     const url = getApiUrl(API_CONFIG.ENDPOINTS.LOGIN);
     console.log('Making login request to:', url);
     
-    const response = await fetch(url, {
+    return withErrorHandler<any>(
+      () => fetch(url, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Login failed: ${response.status} ${response.statusText}`);
-    }
-    
-    return response.json();
+      }),
+      "user login"
+    );
    },
    
    // logout
    async logout() {
-    const token = localStorage.getItem("token");
     const url = getApiUrl(API_CONFIG.ENDPOINTS.LOGOUT);
     
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
+    try {
+      const result = await withErrorHandler<any>(
+        () => fetch(url, {
+          method: "POST",
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": token ? `Bearer ${token}` : "",
-        },
-    });
-    
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    return response.json();
+          },
+        }),
+        "user logout"
+      );
+      
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      return result;
+    } catch (error) {
+      // Clear local auth even if logout request fails
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      throw error;
+    }
    },
 
   getStoredToken() {

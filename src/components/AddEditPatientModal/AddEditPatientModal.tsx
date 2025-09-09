@@ -21,6 +21,8 @@ import {
   parsePatientForForm,
 } from "@/schemas/patientSchema";
 import patientService from "@/services/patientService";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { ErrorDisplay } from "@/components/ErrorStates";
 import { AddEditPatientModalProps } from "./AddEditPatientModal.d";
 
 export function AddEditPatientModal({
@@ -30,6 +32,7 @@ export function AddEditPatientModal({
   onSuccess,
 }: AddEditPatientModalProps) {
   const isEditing = !!patient;
+  const { error, handleError, clearError, setRetryAction } = useErrorHandler();
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientFormSchema),
     defaultValues: parsePatientForForm(patient),
@@ -52,6 +55,7 @@ export function AddEditPatientModal({
 
   const onSubmit = async (data: PatientFormData) => {
     try {
+      clearError();
       const payload = createPatientPayload(data);
       let result;
       if (isEditing && patient) {
@@ -65,17 +69,15 @@ export function AddEditPatientModal({
       onSuccess();
       onClose();
       reset();
-    } catch (error) {
-      console.error("EditPatient: Error saving patient:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while saving the patient"
-      );
+    } catch (err) {
+      const context = isEditing ? "updating patient" : "creating patient";
+      handleError(err, context);
+      setRetryAction(() => onSubmit(data));
     }
   };
 
   const handleClose = () => {
+    clearError();
     reset();
     onClose();
   };
@@ -87,6 +89,18 @@ export function AddEditPatientModal({
       title={isEditing ? "Edit Patient" : "Add New Patient"}
       size="lg"
     >
+      {error && (
+        <ErrorDisplay
+          error={error}
+          onRetry={() => {
+            const formData = form.getValues();
+            onSubmit(formData);
+          }}
+          onClear={clearError}
+          size="sm"
+          context={isEditing ? "updating patient" : "creating patient"}
+        />
+      )}
       <Form {...form}>
         <form
           onSubmit={handleSubmit(onSubmit)}

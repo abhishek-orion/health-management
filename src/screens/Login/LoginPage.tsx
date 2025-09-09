@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, CSSProperties } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/contexts/AuthContext/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { ErrorDisplay } from "@/components/ErrorStates";
+import { useTheme } from "@/contexts/ThemeContext/ThemeContext";
 import "./login.css";
 import Logo from "url:../../../public/logo.jpg";
 import {
@@ -33,9 +36,44 @@ interface LoginFormData {
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+  const { error, handleError, clearError, setRetryAction } = useErrorHandler();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const { theme } = useTheme();
+
+  // Define styles using CSS variables from global.css
+  const styles: Record<string, CSSProperties> = {
+    pageContainer: {
+      height: "100vh",
+      width: "100vw",
+      padding: "var(--space-md)",
+      overflow: "hidden",
+    },
+    backgroundContainer: {
+      height: "100%",
+      width: "100%",
+      borderRadius: "var(--radius-lg)",
+      position: "relative",
+    },
+    logoContainer: {
+      backgroundColor:
+        theme === "dark" ? "var(--card)" : "var(--neutral-white)",
+    },
+    loginContainer: {
+      backgroundColor:
+        theme === "dark" ? "var(--card)" : "var(--neutral-white)",
+    },
+    divider: {
+      width: "100%",
+      height: "1px",
+      backgroundColor:
+        theme === "dark" ? "var(--border)" : "var(--neutral-200)",
+      margin: "var(--space-md) 0",
+    },
+    formSpacing: {
+      marginBottom: "var(--space-md)",
+    },
+  };
 
   const form = useForm<LoginFormData>({
     mode: "onChange",
@@ -49,15 +87,36 @@ const LoginPage = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setError("");
+      clearError();
       setIsSubmitting(true);
-      await login({ email: data.email, password: data.password, rememberMe: data.rememberMe });
+      await login({
+        email: data.email,
+        password: data.password,
+        rememberMe: data.rememberMe,
+      });
       navigate("/dashboard");
-      setIsSubmitting(false);
     } catch (err: any) {
-      setError(err?.message || "Login failed. Please check your credentials.");
+      console.log("Login attempt failed:", err?.message || err);
+      try {
+        handleError(err, "login");
+        setRetryAction(() => onSubmit(data));
+      } catch (handlerError) {
+        console.log(
+          "Error handler failed, using fallback:",
+          (handlerError as any)?.message || handlerError
+        );
+
+        const errorMessage =
+          err?.message ||
+          err?.toString?.() ||
+          "Login failed. Please check your credentials and try again.";
+
+        setTimeout(() => {
+          alert(errorMessage);
+        }, 100);
+      }
+    } finally {
       setIsSubmitting(false);
-      console.error(err);
     }
   };
 
@@ -66,36 +125,83 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen w-screen p-4 overflow-hidden">
+    <div style={styles.pageContainer}>
       <div
         data-testid="login-page"
-        className="login-page-background h-full w-full flex items-center justify-center md:justify-end rounded-lg relative"
+        className="login-page-background"
+        style={styles.backgroundContainer}
       >
-        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 md:top-8 md:left-8 md:transform-none md:translate-x-0 bg-white/100 p-3 rounded-lg shadow-sm">
-          <img src={Logo} alt="Logo" className="h-10 md:h-12" />
+        <div className="logo-container" style={styles.logoContainer}>
+          <img src={Logo} alt="Logo" style={{ height: "2.5rem" }} />
         </div>
         <div
           data-testid="login-container"
-          className="max-w-md w-full mx-auto mt-32 sm:mt-28 md:mt-0 md:mx-0 md:mr-16 lg:mr-24 p-6 bg-white rounded-lg shadow-md sm:p-4 md:p-6 lg:max-w-lg xl:max-w-xl relative z-10 min-h-[600px] flex flex-col"
+          className="login-form-container"
+          style={styles.loginContainer}
         >
-          <Card className="border-0 shadow-none">
+          <Card
+            style={{
+              border: "none",
+              boxShadow: "none",
+              backgroundColor:
+                theme === "dark" ? "var(--card)" : "var(--neutral-white)",
+            }}
+          >
             <CardHeader>
               <CardTitle>
-                <Text type="h3" color="black">Welcome to Health Management</Text>
+                <Text
+                  type="h3"
+                  color={
+                    theme === "dark"
+                      ? "var(--foreground)"
+                      : "var(--neutral-black)"
+                  }
+                >
+                  Welcome to Health Management
+                </Text>
               </CardTitle>
               <CardDescription>
-                <Text type="h6" color="gray">
+                <Text
+                  type="h6"
+                  color={
+                    theme === "dark"
+                      ? "var(--muted-foreground)"
+                      : "var(--neutral-500)"
+                  }
+                >
                   Sign in to your account to continue
                 </Text>
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "var(--space-md)",
+              }}
+            >
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-md)",
+                  }}
                 >
-                  {error && <div className="text-red-500 text-sm">{error}</div>}
+                  {error && (
+                    <ErrorDisplay
+                      error={error}
+                      onRetry={() => {
+                        const formData = form.getValues();
+                        onSubmit(formData);
+                      }}
+                      onClear={clearError}
+                      size="sm"
+                      context="login"
+                      showRetryButton={false}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}
@@ -109,12 +215,21 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6" color="var(--neutral-black)">Email</Text>
+                        <Text
+                          type="h6"
+                          color={
+                            theme === "dark"
+                              ? "var(--foreground)"
+                              : "var(--neutral-black)"
+                          }
+                        >
+                          Email
+                        </Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.email}
                             aria-label="Email"
-                            className="w-full h-12"
+                            style={{ width: "100%", height: "3rem" }}
                             type="email"
                             placeholder="Email"
                             {...field}
@@ -135,22 +250,38 @@ const LoginPage = () => {
                     }}
                     render={({ field }) => (
                       <FormItem>
-                        <Text type="h6" color="var(--neutral-black)">Password</Text>
+                        <Text
+                          type="h6"
+                          color={
+                            theme === "dark"
+                              ? "var(--foreground)"
+                              : "var(--neutral-black)"
+                          }
+                        >
+                          Password
+                        </Text>
                         <FormControl>
                           <Input
                             aria-invalid={!!form.formState.errors.password}
                             aria-label="Password"
-                            className="w-full h-12"
+                            style={{ width: "100%", height: "3rem" }}
                             type={showPassword ? "text" : "password"}
                             placeholder="Password"
                             addon={
                               <Button
                                 type="button"
-                                className="border-none mx-2"
+                                style={{
+                                  border: "none",
+                                  margin: "0 var(--space-xs)",
+                                }}
                                 variant="outline"
                                 size="icon"
                                 onClick={onShowPasswordClick}
-                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                aria-label={
+                                  showPassword
+                                    ? "Hide password"
+                                    : "Show password"
+                                }
                               >
                                 {showPassword ? (
                                   <EyeOff
@@ -172,13 +303,21 @@ const LoginPage = () => {
                     )}
                   />
 
-                  <div className="flex justify-between">
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
                     <FormField
                       control={form.control}
                       name="rememberMe"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="flex items-center gap-2">
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "var(--space-xs)",
+                            }}
+                          >
                             <FormControl>
                               <Checkbox
                                 aria-label="Remember me"
@@ -186,7 +325,16 @@ const LoginPage = () => {
                                 onCheckedChange={field.onChange}
                               />
                             </FormControl>
-                            <Text type="h6" color="var(--neutral-black)">Remember me</Text>
+                            <Text
+                              type="h6"
+                              color={
+                                theme === "dark"
+                                  ? "var(--foreground)"
+                                  : "var(--neutral-black)"
+                              }
+                            >
+                              Remember me
+                            </Text>
                           </div>
                         </FormItem>
                       )}
@@ -201,7 +349,7 @@ const LoginPage = () => {
                   <Button
                     type="submit"
                     aria-label="Login"
-                    className="w-full"
+                    style={{ width: "100%" }}
                     variant="primary"
                     size="lg"
                     disabled={!form.formState.isValid}
@@ -214,14 +362,27 @@ const LoginPage = () => {
                   </Button>
                 </form>
               </Form>
-              <div
-                id="horizontal-divier"
-                className="w-full h-px bg-gray-200 my-4"
-              ></div>
-              <div className="flex justify-center">
-                <Text type="h6" color="var(--neutral-black)">Or</Text>
+              <div id="horizontal-divider" style={styles.divider}></div>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <Text
+                  type="h6"
+                  color={
+                    theme === "dark"
+                      ? "var(--foreground)"
+                      : "var(--neutral-black)"
+                  }
+                >
+                  Or
+                </Text>
               </div>
-              <div className="flex justify-center flex-col gap-2">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+                  gap: "var(--space-xs)",
+                }}
+              >
                 <Button variant="outline" size="lg">
                   Login with Google
                 </Button>

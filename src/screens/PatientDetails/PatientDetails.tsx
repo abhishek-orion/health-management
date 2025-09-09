@@ -8,13 +8,15 @@ import { Button } from '@/components/ui/Button/button';
 import { AddEditPatientModal } from '@/components/AddEditPatientModal';
 import Header from '@/components/Header/Header';
 import { useAuth } from '@/contexts/AuthContext/AuthContext';
-import { UnauthorizedError } from '@/components/ErrorStates';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { ErrorDisplay } from '@/components/ErrorStates';
 
 const PatientDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { patient, loading, error, refetch } = usePatientDetails(id || '');
+  const { clearError } = useErrorHandler();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -52,12 +54,9 @@ const PatientDetails = () => {
     setIsEditModalOpen(true);
   };
 
-  const onLoginButtonClick = () => {
-    navigate('/login');
-  };
-
   const onRetryButtonClick = () => {
-    window.location.reload();
+    clearError();
+    refetch();
   };
 
   if (loading) {
@@ -72,13 +71,34 @@ const PatientDetails = () => {
   }
 
   if (error) {
-    return UnauthorizedError({
+    const httpError = {
+      status: 0,
       message: error,
-      showRetryButton: true,
-      onRetry: onRetryButtonClick,
-      showLoginButton: true,
-      onLogin: onLoginButtonClick
-    });
+      type: 'network' as const,
+      timestamp: new Date(),
+      retryable: true
+    };
+    
+    return (
+      <div className="patient-details-container">
+        <div className="patient-details-header">
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            className="back-button"
+          >
+            <ArrowLeft size={20} />
+            <span>Back to Patients</span>
+          </Button>
+        </div>
+        <ErrorDisplay
+          error={httpError}
+          onRetry={onRetryButtonClick}
+          context="patient details"
+          size="md"
+        />
+      </div>
+    );
   }
 
   if (!patient) {

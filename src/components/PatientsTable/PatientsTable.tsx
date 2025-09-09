@@ -1061,6 +1061,7 @@ const PatientsTable = ({
                   return (
                     <TableRow
                       key={patient.id}
+                      className="group"
                       style={rowStyle}
                       onClick={handleRowClick}
                     >

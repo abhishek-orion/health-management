@@ -1,5 +1,4 @@
-import React from "react";
-import { TextProps } from "./Text.types";
+import { TextProps } from "./Text.d";
 
 const Text = ({ children, type, className, color, style }: TextProps) => {
   switch (type) {

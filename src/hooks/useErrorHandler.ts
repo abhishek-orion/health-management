@@ -114,14 +114,13 @@ export const useErrorHandler = (): UseErrorHandlerReturn => {
   }, [navigate, logout]);
 
   const handleError = useCallback((error: any, context?: string) => {
-    console.error('Error occurred:', error, { context });
+    console.log('Error occurred:', error, { context });
 
     let httpError: HttpError;
 
-    if (error.response) {
-      // HTTP error response
+    if (error?.response) {
       const status = error.response.status;
-      const message = error.response.data?.message || error.message || getErrorMessage(status);
+      const message = error.response.data?.message || error.response.data?.error || error.message || getErrorMessage(status);
       
       httpError = {
         status,
@@ -130,8 +129,8 @@ export const useErrorHandler = (): UseErrorHandlerReturn => {
         timestamp: new Date(),
         retryable: isRetryable(status)
       };
-    } else if (error.request) {
-      // Network error
+    } else if (error?.request) {
+      // Network error (axios-style)
       httpError = {
         status: 0,
         message: context ? `${context}: Network error - please check your connection` : 'Network error - please check your connection',
@@ -139,7 +138,7 @@ export const useErrorHandler = (): UseErrorHandlerReturn => {
         timestamp: new Date(),
         retryable: true
       };
-    } else if (error.name === 'TimeoutError' || error.code === 'ECONNABORTED') {
+    } else if (error?.name === 'TimeoutError' || error?.code === 'ECONNABORTED') {
       // Timeout error
       httpError = {
         status: 0,
@@ -148,11 +147,61 @@ export const useErrorHandler = (): UseErrorHandlerReturn => {
         timestamp: new Date(),
         retryable: true
       };
+    } else if (error instanceof Error) {
+      const errorMessage = error.message;
+      let status = 0;
+      let type: HttpErrorType = null;
+      
+      // Check for common HTTP error patterns in error messages
+      if (errorMessage.includes('401') || errorMessage.toLowerCase().includes('unauthorized')) {
+        status = 401;
+        type = '401';
+      } else if (errorMessage.includes('403') || errorMessage.toLowerCase().includes('forbidden')) {
+        status = 403;
+        type = '403';
+      } else if (errorMessage.includes('404') || errorMessage.toLowerCase().includes('not found')) {
+        status = 404;
+        type = '404';
+      } else if (errorMessage.includes('500') || errorMessage.toLowerCase().includes('internal server error')) {
+        status = 500;
+        type = '500';
+      } else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('fetch')) {
+        type = 'network';
+      }
+      
+      httpError = {
+        status,
+        message: context ? `${context}: ${errorMessage}` : errorMessage,
+        type,
+        timestamp: new Date(),
+        retryable: status === 500 || status === 503 || type === 'network'
+      };
+    } else if (typeof error === 'string') {
+      // String error message
+      let status = 0;
+      let type: HttpErrorType = null;
+      
+      if (error.includes('401') || error.toLowerCase().includes('unauthorized')) {
+        status = 401;
+        type = '401';
+      } else if (error.toLowerCase().includes('login failed') || error.toLowerCase().includes('invalid credentials')) {
+        status = 401;
+        type = '401';
+      }
+      
+      httpError = {
+        status,
+        message: context ? `${context}: ${error}` : error,
+        type,
+        timestamp: new Date(),
+        retryable: status === 500 || status === 503 || type === 'network'
+      };
     } else {
-      // Generic error
+      // Fallback for unknown error types
+      const errorMessage = error?.message || error?.toString?.() || 'An unexpected error occurred';
       httpError = {
         status: 0,
-        message: context ? `${context}: ${error.message || 'An unexpected error occurred'}` : error.message || 'An unexpected error occurred',
+        message: context ? `${context}: ${errorMessage}` : errorMessage,
         type: null,
         timestamp: new Date(),
         retryable: false

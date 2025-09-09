@@ -300,7 +300,7 @@ const handlers = [
     if (authError) return authError;
 
     const patientData = await request.json() as Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>;
-    const newId = Math.max(...patientsStore.getAll().map(p => p.id)) + 1;
+    const newId = Math.max(...patientsStore.getAll().map((p: Patient) => p.id)) + 1;
     const now = new Date().toISOString();
     
     const newPatient: Patient = {
