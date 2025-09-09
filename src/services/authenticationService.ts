@@ -1,14 +1,13 @@
-import { getApiUrl, API_CONFIG } from '../config/api';
-import { withErrorHandler } from './apiErrorHandler';
+import { API_CONFIG } from '../config/api';
+import { withErrorHandler, createApiMethod } from './apiErrorHandler';
 
 const authenticationService = {
     // login
    async login(email: string, password: string) {
-    const url = getApiUrl(API_CONFIG.ENDPOINTS.LOGIN);
-    console.log('Making login request to:', url);
+    console.log('Making login request to:', API_CONFIG.ENDPOINTS.LOGIN);
     
     return withErrorHandler<any>(
-      () => fetch(url, {
+      () => fetch(API_CONFIG.ENDPOINTS.LOGIN, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -21,18 +20,9 @@ const authenticationService = {
    
    // logout
    async logout() {
-    const url = getApiUrl(API_CONFIG.ENDPOINTS.LOGOUT);
-    
     try {
-      const result = await withErrorHandler<any>(
-        () => fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }),
-        "user logout"
-      );
+      const apiCall = createApiMethod<undefined, any>(API_CONFIG.ENDPOINTS.LOGOUT, 'POST', '');
+      const result = await apiCall(undefined, { context: "user logout" });
       
       localStorage.removeItem("token");
       localStorage.removeItem("user");

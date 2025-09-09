@@ -4,8 +4,8 @@ import {
   PaginatedResponse,
 } from "@/types/Pagination/Pagination";
 import { simulateApiCall } from '@/utils/apiSimulator';
-import { getApiUrl, API_CONFIG } from '../config/api';
-import { withErrorHandler } from './apiErrorHandler';
+import { API_CONFIG } from '../config/api';
+import { createApiMethod } from './apiErrorHandler';
 
 
 const patientService = {
@@ -22,32 +22,20 @@ const patientService = {
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.sortOrder) queryParams.append("sortOrder", params.sortOrder);
 
-    const url = `${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}${
+    const endpoint = `${API_CONFIG.ENDPOINTS.PATIENTS}${
       queryParams.toString() ? "?" + queryParams.toString() : ""
     }`;
+    const apiCall = createApiMethod<undefined, PaginatedResponse<Patient>>(endpoint, 'GET', '');
 
-    return withErrorHandler<PaginatedResponse<Patient>>(
-      () => fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }),
-      "fetching patients"
-    );
+    return apiCall(undefined, { context: "fetching patients" });
   },
 
   async getPatientById(id: string): Promise<Patient> {
     // Simulate network latency and occasional errors
     await simulateApiCall({ minLatency: 200, maxLatency: 1200, errorRate: 5 });
 
-    return withErrorHandler<Patient>(
-      () => fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }),
-      `fetching patient ${id}`
-    );
+    const apiCall = createApiMethod<undefined, Patient>(`${API_CONFIG.ENDPOINTS.PATIENTS}/${id}`, 'GET', '');
+    return apiCall(undefined, { context: `fetching patient ${id}` });
   },
 
   async createPatient(
@@ -56,16 +44,8 @@ const patientService = {
     // Simulate network latency and occasional errors
     await simulateApiCall({ minLatency: 400, maxLatency: 2000, errorRate: 3 });
 
-    return withErrorHandler<Patient>(
-      () => fetch(getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(patientData),
-      }),
-      "creating patient"
-    );
+    const apiCall = createApiMethod<Omit<Patient, "id" | "createdAt" | "updatedAt">, Patient>(API_CONFIG.ENDPOINTS.PATIENTS, 'POST', '');
+    return apiCall(patientData, { context: "creating patient" });
   },
 
   async updatePatient(
@@ -75,18 +55,8 @@ const patientService = {
     // Simulate network latency and occasional errors
     await simulateApiCall({ minLatency: 300, maxLatency: 1800, errorRate: 3 });
     
-    const url = `${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}/${id}`;
-  
-    return withErrorHandler<Patient>(
-      () => fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(patientData),
-      }),
-      `updating patient ${id}`
-    );
+    const apiCall = createApiMethod<Partial<Omit<Patient, "id" | "createdAt" | "updatedAt">>, Patient>(`${API_CONFIG.ENDPOINTS.PATIENTS}/${id}`, 'PUT', '');
+    return apiCall(patientData, { context: `updating patient ${id}` });
   },
 
   async deletePatient(
@@ -95,15 +65,8 @@ const patientService = {
     // Simulate network latency and occasional errors
     await simulateApiCall({ minLatency: 250, maxLatency: 1000, errorRate: 2 });
 
-    return withErrorHandler<{ message: string; patient: Patient }>(
-      () => fetch(`${getApiUrl(API_CONFIG.ENDPOINTS.PATIENTS)}/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }),
-      `deleting patient ${id}`
-    );
+    const apiCall = createApiMethod<undefined, { message: string; patient: Patient }>(`${API_CONFIG.ENDPOINTS.PATIENTS}/${id}`, 'DELETE', '');
+    return apiCall(undefined, { context: `deleting patient ${id}` });
   },
 };
 

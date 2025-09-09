@@ -98,7 +98,7 @@ export const createApiMethod = <TParams, TResponse>(
     };
     
     // Add auth header if available
-    const token = localStorage.getItem('auth-token');
+    const token = localStorage.getItem('token');
     if (token) {
       fetchOptions.headers = {
         ...fetchOptions.headers,
@@ -119,7 +119,7 @@ export const handleAuthError = (status: number, context?: string) => {
   switch (status) {
     case 401:
       // Clear auth state
-      localStorage.removeItem('auth-token');
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
       
       // Redirect to login after a delay to show the error message

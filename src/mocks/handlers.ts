@@ -6,7 +6,6 @@ import {
   storeAuthToken,
   removeAuthToken,
   getAuthToken,
-  getAllAuthTokens
 } from "./utils/handlerUtils";
 
 // Create a persistent storage for patients data using sessionStorage
